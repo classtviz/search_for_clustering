@@ -1,5 +1,7 @@
 from sklearn.cluster import *
 from sklearn.metrics import *
+from tslearn.metrics import *
+from tslearn.clustering import *
 from .additional_clusterers import *
 from .additional_metrics import *
 from pandas import DataFrame

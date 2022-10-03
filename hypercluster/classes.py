@@ -133,6 +133,8 @@ class AutoClusterer (Clusterer):
         conditions = 1
         vars_to_optimize = {}
         static_kwargs = {}
+
+        func_dict = self.params_to_optimize.pop('func_dict', None)
         for parameter_name, possible_values in self.params_to_optimize.items():
             if len(possible_values) == 1:
                 static_kwargs[parameter_name] = possible_values
@@ -150,7 +152,15 @@ class AutoClusterer (Clusterer):
         self.total_possible_conditions = conditions
 
         parameters = pd.DataFrame(columns=list(vars_to_optimize.keys()))
-        for row in iter(product(*vars_to_optimize.values())):
+        for row in iter(product(*vars_to_optimize.values(), )):
+
+            vars = dict(zip(vars_to_optimize.keys(), row))
+
+            if (self.clusterer_name == "AgglomerativeClustering" 
+            and vars['linkage'] == 'ward' 
+            and vars['affinity'] != 'euclidean'):
+                continue
+
             parameters = parameters.append(
                 dict(zip(vars_to_optimize.keys(), row)), ignore_index=True
             )
@@ -203,13 +213,32 @@ class AutoClusterer (Clusterer):
             self.labels_df = generate_flattened_df({self.clusterer_name: label_results})
             return self
 
+        clusterers_w_precomputed = {
+            "AffinityPropagation",
+            'AgglomerativeClustering',
+            "DBSCAN",
+            "OPTICS",
+            "SpectralClustering",
+        }
+
+        affinity_or_metric = 'affinity' if 'affinity' in variables_to_optimize else 'metric'
+
         label_results = pd.DataFrame(columns=self.param_sets.columns.union(data.index))
         for i, row in self.param_sets.iterrows():
             single_params = row.to_dict()
-            labels = cluster(self.clusterer_name, data, single_params).labels_
+
+            if self.clusterer_name in clusterers_w_precomputed \
+                and not ('linkage' in single_params and single_params['linkage'] =='ward'):
+                data_to_fit = \
+                    variables_to_optimize[self.clusterer_name]['func_dict'][single_params[affinity_or_metric]](data)
+                single_params[affinity_or_metric] = 'precomputed'
+            else:
+                data_to_fit = data
+
+            labels = cluster(self.clusterer_name, data_to_fit, single_params).labels_
 
             label_row = dict(zip(data.index, labels))
-            label_row.update(single_params)
+            label_row.update(row.to_dict())
             label_results = label_results.append(label_row, ignore_index=True)
             logging.info(
                 "%s - %s of conditions done" % (i, (i / self.total_possible_conditions))
