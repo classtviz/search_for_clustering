@@ -25,11 +25,7 @@ setuptools.setup(
         "matplotlib >= 3.1.0",
         "seaborn >= 0.9.0",
         "scikit-learn >= 0.22.0",
-        "hdbscan >= 0.8.24",
-        "snakemake >= 5.8.2",
-        "python-igraph >=0.7.1",
-        "leidenalg >=0.7.0",
-        "louvain >=0.6.1"
+        "hdbscan >= 0.8.24"
     ],
     package_data={"hypercluster": files},
     packages=setuptools.find_packages()
