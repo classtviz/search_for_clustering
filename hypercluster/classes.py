@@ -1,4 +1,5 @@
 from typing import List, Union
+from copy import deepcopy
 from pandas import DataFrame
 from .utilities import *
 from .visualize import *
@@ -103,7 +104,7 @@ class AutoClusterer (Clusterer):
         self.clus_kwargs = clus_kwargs
 
         if self.params_to_optimize is None:
-            self.params_to_optimize = variables_to_optimize[clusterer_name]
+            self.params_to_optimize = deepcopy(variables_to_optimize[clusterer_name])
         if self.clus_kwargs is None:
             self.clus_kwargs = {}
 

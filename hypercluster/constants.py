@@ -72,8 +72,6 @@ PAIRWISE_DISTANCE_FUNCTIONS = {
 }
 
 PAIRWISE_KERNEL_FUNCTIONS = {
-    # If updating this dictionary, update the doc in both distance_metrics()
-    # and also in pairwise_distances()!
     "additive_chi2": additive_chi2_kernel,
     "chi2": chi2_kernel,
     "linear": linear_kernel,
