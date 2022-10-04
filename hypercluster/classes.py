@@ -222,7 +222,7 @@ class AutoClusterer (Clusterer):
             "SpectralClustering",
         }
 
-        affinity_or_metric = 'affinity' if 'affinity' in variables_to_optimize else 'metric'
+        affinity_or_metric = 'affinity' if 'affinity' in variables_to_optimize[self.clusterer_name] else 'metric'
 
         label_results = pd.DataFrame(columns=self.param_sets.columns.union(data.index))
         for i, row in self.param_sets.iterrows():
