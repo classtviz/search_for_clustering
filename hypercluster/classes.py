@@ -230,11 +230,14 @@ class AutoClusterer (Clusterer):
 
             if self.clusterer_name in clusterers_w_precomputed \
                 and not ('linkage' in single_params and single_params['linkage'] =='ward'):
+                data_to_fit = data.copy()
+                if 'chi2' in single_params[affinity_or_metric]:
+                    data_to_fit = data_to_fit.add(data_to_fit.min(axis=1), axis=0)
                 data_to_fit = \
-                    variables_to_optimize[self.clusterer_name]['func_dict'][single_params[affinity_or_metric]](data)
+                    variables_to_optimize[self.clusterer_name]['func_dict'][single_params[affinity_or_metric]](data_to_fit)
                 single_params[affinity_or_metric] = 'precomputed'
             else:
-                data_to_fit = data
+                data_to_fit = data.copy()
 
             labels = cluster(self.clusterer_name, data_to_fit, single_params).labels_
 
