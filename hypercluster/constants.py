@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.cluster import *
-from sklearn.metrics import *
+from sklearn.metrics.pairwise import *
 from tslearn.metrics import (
     cdist_dtw,
     cdist_ctw,
