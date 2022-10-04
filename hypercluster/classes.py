@@ -97,7 +97,7 @@ class AutoClusterer (Clusterer):
     ):
 
         self.clusterer_name = clusterer_name
-        self.params_to_optimize = params_to_optimize
+        self.params_to_optimize = deepcopy(params_to_optimize)
         self.random_search = random_search
         self.random_search_fraction = random_search_fraction
         self.param_weights = param_weights
