@@ -1,7 +1,13 @@
 import numpy as np
 from sklearn.cluster import *
 from sklearn.metrics import *
-from tslearn.metrics import *
+from tslearn.metrics import (
+    cdist_dtw,
+    cdist_ctw,
+    cdist_soft_dtw,
+    cdist_soft_dtw_normalized,
+    cdist_gak,
+)
 from tslearn.clustering import *
 from .additional_clusterers import *
 from .additional_metrics import *
@@ -62,7 +68,7 @@ PAIRWISE_DISTANCE_FUNCTIONS = {
     "cdist_dtw": cdist_dtw,
     "cdist_ctw": cdist_ctw,
     "cdist_soft_dtw": cdist_soft_dtw,
-    "cdist_soft_dtw_normalized": cdist_soft_dtw_normalized
+    "cdist_soft_dtw_normalized": cdist_soft_dtw_normalized,
 }
 
 PAIRWISE_KERNEL_FUNCTIONS = {
@@ -77,41 +83,77 @@ PAIRWISE_KERNEL_FUNCTIONS = {
     "laplacian": laplacian_kernel,
     "sigmoid": sigmoid_kernel,
     "cosine": cosine_similarity,
-    "gak": cdist_gak
+    "gak": cdist_gak,
 }
 
 distance = [
-    'cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan',
-    'cdist_dtw', 'cdist_ctw', 'cdist_soft_dtw',
-                               'cdist_soft_dtw_normalized'
+    "cityblock",
+    "cosine",
+    "euclidean",
+    "l1",
+    "l2",
+    "manhattan",
+    "cdist_dtw",
+    "cdist_ctw",
+    "cdist_soft_dtw",
+    "cdist_soft_dtw_normalized",
 ]
 
 kernel = [
-    'additive_chi2',
-    'chi2', 'linear', 'poly', 'polynomial', 'rbf',
-    'laplacian', 'sigmoid', 'cosine', 'gak'
+    "additive_chi2",
+    "chi2",
+    "linear",
+    "poly",
+    "polynomial",
+    "rbf",
+    "laplacian",
+    "sigmoid",
+    "cosine",
+    "gak",
 ]
 
 variables_to_optimize = {
-    "AffinityPropagation": dict(damping=damping, affinity=kernel, func_dict=PAIRWISE_KERNEL_FUNCTIONS),
-    'AgglomerativeClustering': dict(
-        n_clusters=n_clusters, affinity=distance,
-        linkage=['average', 'single', 'complete', 'ward'], func_dict=PAIRWISE_DISTANCE_FUNCTIONS
+    "AffinityPropagation": dict(
+        damping=damping, affinity=kernel, func_dict=PAIRWISE_KERNEL_FUNCTIONS
     ),
-    "Birch": dict(threshold=np.linspace(0.1, 0.99, num=10), branching_factor=list(range(10, 101, 10)), n_clusters=n_clusters),
-    "DBSCAN": dict(eps=np.linspace(0.01, 1., num=10), metric=distance, func_dict=PAIRWISE_DISTANCE_FUNCTIONS),
+    "AgglomerativeClustering": dict(
+        n_clusters=n_clusters,
+        affinity=distance,
+        linkage=["average", "single", "complete", "ward"],
+        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    ),
+    "Birch": dict(
+        threshold=np.linspace(0.1, 0.99, num=10),
+        branching_factor=list(range(10, 101, 10)),
+        n_clusters=n_clusters,
+    ),
+    "DBSCAN": dict(
+        eps=np.linspace(0.01, 1.0, num=10),
+        metric=distance,
+        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    ),
     "KMeans": dict(n_clusters=n_clusters),
     "MiniBatchKMeans": dict(n_clusters=n_clusters),
     "BisectingKMeans": dict(n_clusters=n_clusters),
     "MeanShift": dict(cluster_all=[False]),
-    "OPTICS": dict(min_samples=min_cluster_size, metric=distance, func_dict=PAIRWISE_DISTANCE_FUNCTIONS),
+    "OPTICS": dict(
+        min_samples=min_cluster_size,
+        metric=distance,
+        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    ),
     "NMFCluster": dict(n_clusters=n_clusters),
-    "SpectralClustering": dict(n_clusters=n_clusters, affinity=kernel, func_dict=PAIRWISE_KERNEL_FUNCTIONS),
-    "SpectralBiclustering": dict(n_clusters=n_clusters, method=['bistochastic', 'scale', 'log']),
+    "SpectralClustering": dict(
+        n_clusters=n_clusters, affinity=kernel, func_dict=PAIRWISE_KERNEL_FUNCTIONS
+    ),
+    "SpectralBiclustering": dict(
+        n_clusters=n_clusters, method=["bistochastic", "scale", "log"]
+    ),
     "SpectralCoclustering": dict(n_clusters=n_clusters),
     "KShape": dict(n_clusters=n_clusters),
-    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel+['gak']),
-    "TimeSeriesKMeans": dict(n_clusters=n_clusters, metric=['euclidean', 'dtw', 'softdtw']),
+    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel + ["gak"]),
+    "TimeSeriesKMeans": dict(
+        n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
+    ),
 }
 
 
@@ -132,53 +174,53 @@ inherent_metrics = [
     "smallest_largest_clusters_ratio",
     "number_of_clusters",
     "smallest_cluster_size",
-    "largest_cluster_size"
+    "largest_cluster_size",
 ]
 
 min_or_max = {
-    "adjusted_rand_score": 'max',
-    "adjusted_mutual_info_score": 'max',
-    "homogeneity_score": 'max',
-    "completeness_score": 'max',
-    "fowlkes_mallows_score": 'max',
-    "silhouette_score": 'max',
-    "calinski_harabasz_score": 'max',
-    "davies_bouldin_score": 'min',
-    "mutual_info_score": 'max',
-    "v_measure_score": 'max',
+    "adjusted_rand_score": "max",
+    "adjusted_mutual_info_score": "max",
+    "homogeneity_score": "max",
+    "completeness_score": "max",
+    "fowlkes_mallows_score": "max",
+    "silhouette_score": "max",
+    "calinski_harabasz_score": "max",
+    "davies_bouldin_score": "min",
+    "mutual_info_score": "max",
+    "v_measure_score": "max",
 }
 
 pdist_adjacency_methods = [
-    'braycurtis',
-    'canberra',
-    'chebyshev',
-    'cityblock',
-    'correlation',
-    'cosine',
-    'dice',
-    'euclidean',
-    'hamming',
-    'jaccard',
-    'jensenshannon',
-    'kulsinski',
-    'mahalanobis',
-    'matching',
-    'minkowski',
-    'rogerstanimoto',
-    'russellrao',
-    'seuclidean',
-    'sokalmichener',
-    'sokalsneath',
-    'sqeuclidean',
-    'yule'
+    "braycurtis",
+    "canberra",
+    "chebyshev",
+    "cityblock",
+    "correlation",
+    "cosine",
+    "dice",
+    "euclidean",
+    "hamming",
+    "jaccard",
+    "jensenshannon",
+    "kulsinski",
+    "mahalanobis",
+    "matching",
+    "minkowski",
+    "rogerstanimoto",
+    "russellrao",
+    "seuclidean",
+    "sokalmichener",
+    "sokalsneath",
+    "sqeuclidean",
+    "yule",
 ]
 
 
 valid_partition_types = [
-    'RBConfigurationVertexPartition',
-    'ModularityVertexPartition',
-    'RBERVertexPartition',
-    'CPMVertexPartition',
-    'SignificanceVertexPartition',
-    'SurpriseVertexPartition'
+    "RBConfigurationVertexPartition",
+    "ModularityVertexPartition",
+    "RBERVertexPartition",
+    "CPMVertexPartition",
+    "SignificanceVertexPartition",
+    "SurpriseVertexPartition",
 ]

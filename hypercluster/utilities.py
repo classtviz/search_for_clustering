@@ -1,6 +1,5 @@
 from sklearn.cluster import *
 from sklearn.metrics import *
-from tslearn.metrics import *
 from tslearn.clustering import *
 from .additional_clusterers import *
 from .additional_metrics import *
@@ -30,16 +29,25 @@ def calculate_row_weights(
         individual weights.
 
     """
-    param_weights.update({
-        param: {
-            val: param_weights.get(param, {}).get(
-                val, (1-sum(param_weights.get(param, {}).values()))/len([
-                    notweighted for notweighted in vars_to_optimize.get(param,  {})
-                    if notweighted not in param_weights.get(param, {}).keys()
-                ])
-            ) for val in vals
-        } for param, vals in vars_to_optimize.items()
-    })
+    param_weights.update(
+        {
+            param: {
+                val: param_weights.get(param, {}).get(
+                    val,
+                    (1 - sum(param_weights.get(param, {}).values()))
+                    / len(
+                        [
+                            notweighted
+                            for notweighted in vars_to_optimize.get(param, {})
+                            if notweighted not in param_weights.get(param, {}).keys()
+                        ]
+                    ),
+                )
+                for val in vals
+            }
+            for param, vals in vars_to_optimize.items()
+        }
+    )
 
     return np.prod([param_weights[param][val] for param, val in row.to_dict().items()])
 
@@ -47,12 +55,12 @@ def calculate_row_weights(
 def cluster(clusterer_name: str, data: DataFrame, params: dict = {}):
     """Runs a given clusterer with a given set of parameters.
 
-    Args: 
+    Args:
         clusterer_name (str): String name of clusterer.
         data (DataFrame): Dataframe with elements to cluster as index and examples as columns.
         params (dict): Dictionary of parameter names and values to feed into clusterer. Default {}
 
-    Returns: 
+    Returns:
         Instance of the clusterer fit with the data provided.
     """
     clusterer = eval(clusterer_name)(**params)
@@ -127,16 +135,15 @@ def generate_flattened_df(df_dict: Dict[str, DataFrame]) -> DataFrame:
         cols_for_labels = df.index.to_frame()
         inds = cols_for_labels.apply(
             lambda row: param_delim.join(
-                [clus_name] + ["%s%s%s" % (k, val_delim, v) for k, v in row.to_dict().items()]
+                [clus_name]
+                + ["%s%s%s" % (k, val_delim, v) for k, v in row.to_dict().items()]
             ),
             axis=1,
         )
         df.index = inds
         df = df.transpose()
 
-        merged_df = pd.concat(
-            [merged_df, df], join="outer", axis=1
-        )
+        merged_df = pd.concat([merged_df, df], join="outer", axis=1)
     return merged_df
 
 
@@ -145,52 +152,58 @@ def convert_to_multiind(key: str, df: DataFrame) -> DataFrame:
     converts to a multiindexed rather than collapsed into string. Equivalent to grabbing
     Clusterer.labels[clusterer] or .evaluations[clusterer]. Opposite of generate_flattened_df.
 
-    Args: 
-        key (str): Name of clusterer, must match beginning of columns to convert.  
-        df (DataFrame): Dataframe to grab chunk from.  
+    Args:
+        key (str): Name of clusterer, must match beginning of columns to convert.
+        df (DataFrame): Dataframe to grab chunk from.
 
-    Returns: 
+    Returns:
         Subset DataFrame with multiindex.
 
     """
     clus_cols = [col for col in df.columns if col.split(param_delim, 1)[0] == key]
     temp = df[clus_cols].transpose()
     temp.index = pd.MultiIndex.from_frame(
-        pd.DataFrame([{
-            s.split(val_delim, 1)[0]: s.split(val_delim, 1)[1] for s in i.split(param_delim)[1:]
-        } for i in temp.index]).astype(float, errors='ignore')
+        pd.DataFrame(
+            [
+                {
+                    s.split(val_delim, 1)[0]: s.split(val_delim, 1)[1]
+                    for s in i.split(param_delim)[1:]
+                }
+                for i in temp.index
+            ]
+        ).astype(float, errors="ignore")
     )
     return temp.sort_index().transpose()
 
 
 def pick_best_labels(
-        evaluation_results_df: DataFrame,
-        clustering_labels_df: DataFrame,
-        method: Optional[str] = None,
-        min_or_max: Optional[str] = None
+    evaluation_results_df: DataFrame,
+    clustering_labels_df: DataFrame,
+    method: Optional[str] = None,
+    min_or_max: Optional[str] = None,
 ) -> Iterable:
-    """From evaluations and a metric to minimize or maximize, return all labels with top pick.  
+    """From evaluations and a metric to minimize or maximize, return all labels with top pick.
 
-    Args: 
-        evaluation_results_df (DataFrame): Evaluations DataFrame from optimize_clustering.  
-        clustering_labels_df (DataFrame): Labels DataFrame from optimize_clustering.  
-        method (str): Method with which to choose the best labels.  
-        min_or_max (str): Whether to minimize or maximize the metric. Must be 'min' or 'max'.  
-    Returns (DataFrame): 
-        DataFrame of all top labels.  
+    Args:
+        evaluation_results_df (DataFrame): Evaluations DataFrame from optimize_clustering.
+        clustering_labels_df (DataFrame): Labels DataFrame from optimize_clustering.
+        method (str): Method with which to choose the best labels.
+        min_or_max (str): Whether to minimize or maximize the metric. Must be 'min' or 'max'.
+    Returns (DataFrame):
+        DataFrame of all top labels.
     """
     if method is None:
         method = "silhouette_score"
     if min_or_max is None:
-        min_or_max = 'max'
+        min_or_max = "max"
 
     best_labels = evaluation_results_df.loc[method, :]
-    if min_or_max == 'min':
+    if min_or_max == "min":
         best_labels = best_labels.index[best_labels == best_labels.min()]
         return clustering_labels_df[best_labels]
-    elif min_or_max == 'max':
+    elif min_or_max == "max":
         best_labels = best_labels.index[best_labels == best_labels.max()]
         return clustering_labels_df[best_labels]
-    logging.error('min_or_max must be either min or max, %s invalid choice' % min_or_max)
-
-
+    logging.error(
+        "min_or_max must be either min or max, %s invalid choice" % min_or_max
+    )

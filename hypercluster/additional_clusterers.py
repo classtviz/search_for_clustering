@@ -8,15 +8,9 @@ Attributes:
 .. _hdbscan:
     https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html#the-simple-case/
 """
-from typing import Optional, Iterable
-import logging
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import pdist
 from sklearn.decomposition import NMF
-from sklearn.neighbors import NearestNeighbors
-from hdbscan import HDBSCAN
-from .constants import pdist_adjacency_methods, valid_partition_types
 
 
 class NMFCluster:
@@ -27,9 +21,10 @@ class NMFCluster:
         n_clusters: The number of clusters to find. Used as n_components when fitting.
         **nmf_kwargs:
     """
+
     def __init__(self, n_clusters: int = 8, **nmf_kwargs):
 
-        nmf_kwargs['n_components'] = n_clusters
+        nmf_kwargs["n_components"] = n_clusters
 
         self.NMF = NMF(**nmf_kwargs)
         self.n_clusters = n_clusters
@@ -41,25 +36,25 @@ class NMFCluster:
         large as the original, but with positive values only and zeros and hence appropriate for
         NMF. Uses decomposed matrix H, which is nxk (with n=number of samples and k=number of
         components) to assign cluster membership. Each sample is assigned to the cluster for
-        which it has the highest membership score. See `sklearn.decomposition.NMF`_  
+        which it has the highest membership score. See `sklearn.decomposition.NMF`_
 
-        Args: 
-            data (DataFrame): Data to fit with samples as rows and features as columns.  
+        Args:
+            data (DataFrame): Data to fit with samples as rows and features as columns.
 
-        Returns: 
-            self with labels\_ attribute.  
+        Returns:
+            self with labels\_ attribute.
 
-        .. _sklearn.decomposition.NMF: 
+        .. _sklearn.decomposition.NMF:
             https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html
         """
 
-        if np.any(data<0):
+        if np.any(data < 0):
             positive = data.copy()
             positive[positive < 0] = 0
             negative = data.copy()
             negative[negative > 0] = 0
             negative = -negative
-            data = pd.concat([positive, negative], axis=1, join='outer')
+            data = pd.concat([positive, negative], axis=1, join="outer")
 
         self.labels_ = pd.DataFrame(self.NMF.fit_transform(data)).idxmax(axis=1).values
         return self

@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/../envs/remote/bin/python",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/../envs/remote/"
+    ]
+}
