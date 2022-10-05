@@ -259,17 +259,21 @@ class AutoClusterer(Clusterer):
                     if (data_to_score < 0).any().any():
                         data_to_score = data_to_score.add(data_to_score.min(axis=1).abs(), axis=0)
                     
+                try:
+                    score = evaluate_one(
+                        pd.Series(labels, index=data.index),
+                        score_metric,
+                        data=data_to_score,
+                        metric_kwargs=(
+                            None
+                            if not (score_metric == "silhouette_score") or not is_precomputed(self.clusterer_name, single_params)
+                            else {"metric": "precomputed"}
+                        ),
+                    )
+                except ValueError as e:
+                    print(self.clusterer_name, score_metric, keep_metric_name, single_params)
+                    raise e
 
-                score = evaluate_one(
-                    pd.Series(labels, index=data.index),
-                    score_metric,
-                    data=data_to_score,
-                    metric_kwargs=(
-                        None
-                        if not (score_metric == "silhouette_score") or not is_precomputed(self.clusterer_name, single_params)
-                        else {"metric": "precomputed"}
-                    ),
-                )
                 if mlflow:
                     mlflow.log_metric(score_metric, score)
 
