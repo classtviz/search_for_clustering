@@ -236,6 +236,8 @@ class AutoClusterer(Clusterer):
                 data_to_fit = self.precomputed[single_params[affinity_or_metric]].copy()
                 keep_metric_name = single_params[affinity_or_metric]
                 single_params[affinity_or_metric] = "precomputed"
+                if np.any(np.diagonal(data_to_fit) != 0):
+                    data_to_fit.values[tuple([np.arange(data_to_fit.shape[0])]*2)] = 0.
             else:
                 data_to_fit = data.copy()
 
