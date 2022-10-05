@@ -252,7 +252,7 @@ class AutoClusterer(Clusterer):
                         if keep_metric_name in PAIRWISE_KERNEL_FUNCTIONS:
                             data_to_score *= -1
                         if np.any(np.diagonal(data_to_score) != 0):
-                            data_to_score.values[[np.arange(data_to_score.shape[0])]*2] = 0.
+                            data_to_score.values[tuple([np.arange(data_to_score.shape[0])]*2)] = 0.
 
                     if (data_to_score < 0).any().any():
                         data_to_score = data_to_score.add(data_to_score.min(axis=1).abs(), axis=0)
