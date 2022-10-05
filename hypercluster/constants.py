@@ -59,7 +59,7 @@ knn = [20, 30, 60]
 
 PAIRWISE_DISTANCE_FUNCTIONS = {
     "cityblock": manhattan_distances,
-    "cosine": cosine_distances,
+    "cosine_dist": cosine_distances,
     "euclidean": euclidean_distances,
     "haversine": haversine_distances,
     "l2": euclidean_distances,
@@ -80,13 +80,13 @@ PAIRWISE_KERNEL_FUNCTIONS = {
     "rbf": rbf_kernel,
     "laplacian": laplacian_kernel,
     "sigmoid": sigmoid_kernel,
-    "cosine": cosine_similarity,
+    "cosine_sim": cosine_similarity,
     "gak": cdist_gak,
 }
 
 distance = [
     "cityblock",
-    "cosine",
+    "cosine_dist",
     "euclidean",
     "l1",
     "l2",
@@ -106,7 +106,7 @@ kernel = [
     "rbf",
     "laplacian",
     "sigmoid",
-    "cosine",
+    "cosine_sim",
     "gak",
 ]
 
@@ -153,6 +153,15 @@ variables_to_optimize = {
         n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
     ),
 }
+
+
+clusterers_w_precomputed = {
+            "AffinityPropagation",
+            "AgglomerativeClustering",
+            "DBSCAN",
+            "OPTICS",
+            "SpectralClustering",
+        }
 
 
 need_ground_truth = [

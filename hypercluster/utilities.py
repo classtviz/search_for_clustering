@@ -207,3 +207,21 @@ def pick_best_labels(
     logging.error(
         "min_or_max must be either min or max, %s invalid choice" % min_or_max
     )
+
+
+def get_precomputed(data, metrics):
+    return {
+        metric: pd.DataFrame(PAIRWISE_KERNEL_FUNCTIONS[metric](
+            data
+            if "chi2" not in metric
+            else data.add(data.min(axis=1).abs(), axis=0)
+        )
+        if metric in kernel
+        else PAIRWISE_DISTANCE_FUNCTIONS[metric](data), index=data.index, columns=data.index)
+        for metric in metrics
+    }
+
+def is_precomputed(clust_name, params):
+    return clust_name in clusterers_w_precomputed and not (
+                "linkage" in params and params["linkage"] == "ward"
+    )
