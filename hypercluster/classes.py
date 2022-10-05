@@ -217,7 +217,6 @@ class AutoClusterer(Clusterer):
             self.labels_df = generate_flattened_df({self.clusterer_name: label_results})
             return self
 
-        # TODO: add mlflow logging
         affinity_or_metric = (
             "affinity"
             if "affinity" in variables_to_optimize[self.clusterer_name]
@@ -252,10 +251,12 @@ class AutoClusterer(Clusterer):
                         data_to_score = self.precomputed[keep_metric_name].copy()
                         if keep_metric_name in PAIRWISE_KERNEL_FUNCTIONS:
                             data_to_score *= -1
+                        if np.any(np.diagonal(data_to_score) != 0):
+                            data_to_score.values[[np.arange(data_to_score.shape[0])]*2] = 0.
+
                     if (data_to_score < 0).any().any():
                         data_to_score = data_to_score.add(data_to_score.min(axis=1).abs(), axis=0)
-                    if np.any(np.diagonal(data_to_score) != 0):
-                        data_to_score.values[[np.arange(data_to_score.shape[0])]*2] = 0.
+                    
 
                 score = evaluate_one(
                     pd.Series(labels, index=data.index),
