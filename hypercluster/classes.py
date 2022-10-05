@@ -247,7 +247,7 @@ class AutoClusterer(Clusterer):
             labels = cluster(self.clusterer_name, data_to_fit, single_params).labels_
 
             for score_metric in inherent_metrics:
-                data_to_score = data
+                data_to_score = data.copy()
                 if (score_metric == "silhouette_score"):
                     if is_precomputed(self.clusterer_name, single_params):
                         data_to_score = self.precomputed[keep_metric_name].copy()
@@ -258,6 +258,9 @@ class AutoClusterer(Clusterer):
 
                     if (data_to_score < 0).any().any():
                         data_to_score = data_to_score.add(data_to_score.min(axis=1).abs(), axis=0)
+
+                    if is_precomputed(self.clusterer_name, single_params) and np.any(np.diagonal(data_to_score) != 0):
+                        data_to_score.values[tuple([np.arange(data_to_score.shape[0])]*2)] = 0.
                     
                 try:
                     score = evaluate_one(
