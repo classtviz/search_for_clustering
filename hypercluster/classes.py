@@ -263,16 +263,26 @@ class AutoClusterer(Clusterer):
                         data_to_score.values[tuple([np.arange(data_to_score.shape[0])]*2)] = 0.
                     
                 try:
-                    score = evaluate_one(
-                        pd.Series(labels, index=data.index),
-                        score_metric,
-                        data=data_to_score,
-                        metric_kwargs=(
-                            None
-                            if not (score_metric == "silhouette_score") or not is_precomputed(self.clusterer_name, single_params)
-                            else {"metric": "precomputed"}
-                        ),
-                    )
+                    if (len(set(labels)) == len(labels)):
+                        if (score_metric == "silhouette_score"):
+                            score = -1
+                        elif score_metric == 'calinski_harabasz_score':
+                            score = 0
+                        elif score_metric == 'davies_bouldin_score':
+                            score = float('inf')
+                        else:
+                            score = np.NaN
+                    else:
+                        score = evaluate_one(
+                            pd.Series(labels, index=data.index),
+                            score_metric,
+                            data=data_to_score,
+                            metric_kwargs=(
+                                None
+                                if not (score_metric == "silhouette_score") or not is_precomputed(self.clusterer_name, single_params)
+                                else {"metric": "precomputed"}
+                            ),
+                        )
                 except ValueError as e:
                     print(self.clusterer_name, score_metric, keep_metric_name, single_params)
                     raise e
@@ -285,7 +295,7 @@ class AutoClusterer(Clusterer):
 
             label_row = dict(zip(data.index, labels))
             label_row.update(row.to_dict())
-            label_results = label_results.append(label_row, ignore_index=True)
+            label_results = pd.concat([label_results, pd.DataFrame([label_row])], ignore_index=True)
             logging.info(
                 "%s - %s of conditions done" % (i, (i / self.total_possible_conditions))
             )

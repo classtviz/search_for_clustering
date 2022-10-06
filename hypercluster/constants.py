@@ -58,12 +58,8 @@ resolutions = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
 knn = [20, 30, 60]
 
 PAIRWISE_DISTANCE_FUNCTIONS = {
-    "cityblock": manhattan_distances,
     "cosine_dist": cosine_distances,
     "euclidean": euclidean_distances,
-    "haversine": haversine_distances,
-    "l2": euclidean_distances,
-    "l1": manhattan_distances,
     "manhattan": manhattan_distances,
     "cdist_dtw": cdist_dtw,
     "cdist_ctw": cdist_ctw,
@@ -76,7 +72,6 @@ PAIRWISE_KERNEL_FUNCTIONS = {
     "chi2": chi2_kernel,
     "linear": linear_kernel,
     "polynomial": polynomial_kernel,
-    "poly": polynomial_kernel,
     "rbf": rbf_kernel,
     "laplacian": laplacian_kernel,
     "sigmoid": sigmoid_kernel,
@@ -85,11 +80,8 @@ PAIRWISE_KERNEL_FUNCTIONS = {
 }
 
 distance = [
-    "cityblock",
     "cosine_dist",
     "euclidean",
-    "l1",
-    "l2",
     "manhattan",
     "cdist_dtw",
     "cdist_ctw",
@@ -101,7 +93,6 @@ kernel = [
     "additive_chi2",
     "chi2",
     "linear",
-    "poly",
     "polynomial",
     "rbf",
     "laplacian",
@@ -148,7 +139,7 @@ variables_to_optimize = {
     ),
     "SpectralCoclustering": dict(n_clusters=n_clusters),
     "KShape": dict(n_clusters=n_clusters),
-    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel + ["gak"]),
+    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel),
     "TimeSeriesKMeans": dict(
         n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
     ),
