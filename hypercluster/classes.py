@@ -1,10 +1,27 @@
-from typing import List, Union
+from typing import List, Union, Optional, Iterable, Dict
 from copy import deepcopy
 from pandas import DataFrame
-from .utilities import *
-from .visualize import *
+from .utilities import (
+    get_precomputed,
+    evaluate_one,
+    pick_best_labels,
+    generate_flattened_df,
+    calculate_row_weights,
+    cluster,
+    is_precomputed,
+)
 from itertools import product
-from .constants import *
+from .constants import (
+    variables_to_optimize,
+    inherent_metrics,
+    PAIRWISE_KERNEL_FUNCTIONS,
+    categories,
+    kernel_metrics,
+    distance_metrics,
+)
+import pandas as pd
+import numpy as np
+import logging
 
 try:
     import mlflow
@@ -19,36 +36,6 @@ class Clusterer:
         self, method: Optional[str] = None, min_or_max: Optional[str] = None
     ):
         return pick_best_labels(self.evaluation_df, self.labels_df, method, min_or_max)
-
-    def visualize_evaluations(
-        self, savefig: bool = False, output_prefix: str = "evaluations", **heatmap_kws
-    ) -> List[matplotlib.axes.Axes]:
-        return visualize_evaluations(
-            self.evaluation_df, savefig, output_prefix, **heatmap_kws
-        )
-
-    def visualize_sample_label_consistency(
-        self, savefig: bool = False, output_prefix: Optional[str] = None, **heatmap_kws
-    ) -> List[matplotlib.axes.Axes]:
-        return visualize_sample_label_consistency(
-            self.labels_df, savefig, output_prefix, **heatmap_kws
-        )
-
-    def visualize_label_agreement(
-        self,
-        method: Optional[str] = None,
-        savefig: bool = False,
-        output_prefix: Optional[str] = None,
-        **heatmap_kws
-    ) -> List[matplotlib.axes.Axes]:
-        return visualize_label_agreement(
-            self.labels_df, method, savefig, output_prefix, **heatmap_kws
-        )
-
-    def visualize_for_picking_labels(
-        self, method: Optional[str] = None, savefig_prefix: Optional[str] = None
-    ):
-        return visualize_for_picking_labels(self.evaluation_df, method, savefig_prefix)
 
     def fit_predict(
         self, data: Optional[DataFrame], parameter_set_name, method, min_of_max
@@ -165,8 +152,9 @@ class AutoClusterer(Clusterer):
             ):
                 continue
 
-            parameters = pd.concat([parameters, pd.DataFrame([
-                dict(zip(vars_to_optimize.keys(), row))])], ignore_index=True
+            parameters = pd.concat(
+                [parameters, pd.DataFrame([dict(zip(vars_to_optimize.keys(), row))])],
+                ignore_index=True,
             )
 
         if self.random_search and len(parameters) > 1:
@@ -236,40 +224,57 @@ class AutoClusterer(Clusterer):
                 data_to_fit = self.precomputed[single_params[affinity_or_metric]].copy()
                 keep_metric_name = single_params[affinity_or_metric]
                 single_params[affinity_or_metric] = "precomputed"
+
+                if (
+                    keep_metric_name == "cdist_soft_dtw"
+                    and (data_to_fit < 0.0).any().any()
+                ):
+                    data_to_fit = data_to_fit.add(abs(data_to_fit.min()))
+
                 if np.any(np.diagonal(data_to_fit) != 0):
-                    data_to_fit.values[tuple([np.arange(data_to_fit.shape[0])]*2)] = 0.
+                    data_to_fit.values[
+                        tuple([np.arange(data_to_fit.shape[0])] * 2)
+                    ] = 0.0
             else:
                 data_to_fit = data.copy()
 
-            # if self.clusterer_name =='Birch':
-            #     single_params['branching_factor'] = int(single_params['branching_factor'])
-
-            labels = cluster(self.clusterer_name, data_to_fit, single_params).labels_
+            try:
+                labels = cluster(
+                    self.clusterer_name, data_to_fit, single_params
+                ).labels_
+            except ValueError as e:
+                print(self.clusterer_name, single_params, keep_metric_name)
 
             for score_metric in inherent_metrics:
                 data_to_score = data.copy()
-                if (score_metric == "silhouette_score"):
+                if score_metric == "silhouette_score":
                     if is_precomputed(self.clusterer_name, single_params):
                         data_to_score = self.precomputed[keep_metric_name].copy()
                         if keep_metric_name in PAIRWISE_KERNEL_FUNCTIONS:
                             data_to_score *= -1
                         if np.any(np.diagonal(data_to_score) != 0):
-                            data_to_score.values[tuple([np.arange(data_to_score.shape[0])]*2)] = 0.
+                            data_to_score.values[
+                                tuple([np.arange(data_to_score.shape[0])] * 2)
+                            ] = 0.0
 
                     if (data_to_score < 0).any().any():
-                        data_to_score = data_to_score.add(data_to_score.min(axis=1).abs(), axis=0)
+                        data_to_score = data_to_score.add(abs(data_to_score.min()))
 
-                    if is_precomputed(self.clusterer_name, single_params) and np.any(np.diagonal(data_to_score) != 0):
-                        data_to_score.values[tuple([np.arange(data_to_score.shape[0])]*2)] = 0.
-                    
+                    if is_precomputed(self.clusterer_name, single_params) and np.any(
+                        np.diagonal(data_to_score) != 0
+                    ):
+                        data_to_score.values[
+                            tuple([np.arange(data_to_score.shape[0])] * 2)
+                        ] = 0.0
+
                 try:
-                    if (len(set(labels)) == len(labels)):
-                        if (score_metric == "silhouette_score"):
+                    if len(set(labels)) == len(labels):
+                        if score_metric == "silhouette_score":
                             score = -1
-                        elif score_metric == 'calinski_harabasz_score':
+                        elif score_metric == "calinski_harabasz_score":
                             score = 0
-                        elif score_metric == 'davies_bouldin_score':
-                            score = float('inf')
+                        elif score_metric == "davies_bouldin_score":
+                            score = float("inf")
                         else:
                             score = np.NaN
                     else:
@@ -279,12 +284,20 @@ class AutoClusterer(Clusterer):
                             data=data_to_score,
                             metric_kwargs=(
                                 None
-                                if not (score_metric == "silhouette_score") or not is_precomputed(self.clusterer_name, single_params)
+                                if not (score_metric == "silhouette_score")
+                                or not is_precomputed(
+                                    self.clusterer_name, single_params
+                                )
                                 else {"metric": "precomputed"}
                             ),
                         )
                 except ValueError as e:
-                    print(self.clusterer_name, score_metric, keep_metric_name, single_params)
+                    print(
+                        self.clusterer_name,
+                        score_metric,
+                        keep_metric_name,
+                        single_params,
+                    )
                     raise e
 
                 if mlflow:
@@ -295,7 +308,9 @@ class AutoClusterer(Clusterer):
 
             label_row = dict(zip(data.index, labels))
             label_row.update(row.to_dict())
-            label_results = pd.concat([label_results, pd.DataFrame([label_row])], ignore_index=True)
+            label_results = pd.concat(
+                [label_results, pd.DataFrame([label_row])], ignore_index=True
+            )
             logging.info(
                 "%s - %s of conditions done" % (i, (i / self.total_possible_conditions))
             )
@@ -447,7 +462,9 @@ class MultiAutoClusterer(Clusterer):
             self.evaluation_ = evaluation_
             self.evaluation_df = evaluation_df
 
-            precomputed = get_precomputed(data.copy(), kernel + distance)
+            precomputed = get_precomputed(
+                data.copy(), kernel_metrics + distance_metrics
+            )
 
             autoclusterers = []
             for clus_name in self.algorithm_names:

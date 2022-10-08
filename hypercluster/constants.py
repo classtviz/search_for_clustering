@@ -1,6 +1,17 @@
 import numpy as np
-from sklearn.cluster import *
-from sklearn.metrics.pairwise import *
+from sklearn.metrics.pairwise import (
+    cosine_distances,
+    euclidean_distances,
+    manhattan_distances,
+    additive_chi2_kernel,
+    chi2_kernel,
+    linear_kernel,
+    polynomial_kernel,
+    rbf_kernel,
+    laplacian_kernel,
+    sigmoid_kernel,
+    cosine_similarity,
+)
 from tslearn.metrics import (
     cdist_dtw,
     cdist_ctw,
@@ -8,8 +19,6 @@ from tslearn.metrics import (
     cdist_soft_dtw_normalized,
     cdist_gak,
 )
-from tslearn.clustering import *
-from .additional_clusterers import *
 from .additional_metrics import *
 
 
@@ -79,7 +88,7 @@ PAIRWISE_KERNEL_FUNCTIONS = {
     "gak": cdist_gak,
 }
 
-distance = [
+distance_metrics = [
     "cosine_dist",
     "euclidean",
     "manhattan",
@@ -89,7 +98,7 @@ distance = [
     "cdist_soft_dtw_normalized",
 ]
 
-kernel = [
+kernel_metrics = [
     "additive_chi2",
     "chi2",
     "linear",
@@ -103,11 +112,11 @@ kernel = [
 
 variables_to_optimize = {
     "AffinityPropagation": dict(
-        damping=damping, affinity=kernel, func_dict=PAIRWISE_KERNEL_FUNCTIONS
+        damping=damping, affinity=kernel_metrics, func_dict=PAIRWISE_KERNEL_FUNCTIONS
     ),
     "AgglomerativeClustering": dict(
         n_clusters=n_clusters,
-        affinity=distance,
+        affinity=distance_metrics,
         linkage=["average", "single", "complete", "ward"],
         func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
     ),
@@ -118,7 +127,7 @@ variables_to_optimize = {
     ),
     "DBSCAN": dict(
         eps=np.linspace(0.01, 1.0, num=10),
-        metric=distance,
+        metric=distance_metrics,
         func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
     ),
     "KMeans": dict(n_clusters=n_clusters),
@@ -127,19 +136,21 @@ variables_to_optimize = {
     "MeanShift": dict(cluster_all=[False]),
     "OPTICS": dict(
         min_samples=min_cluster_size,
-        metric=distance,
+        metric=distance_metrics,
         func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
     ),
     "NMFCluster": dict(n_clusters=n_clusters),
     "SpectralClustering": dict(
-        n_clusters=n_clusters, affinity=kernel, func_dict=PAIRWISE_KERNEL_FUNCTIONS
+        n_clusters=n_clusters,
+        affinity=kernel_metrics,
+        func_dict=PAIRWISE_KERNEL_FUNCTIONS,
     ),
     "SpectralBiclustering": dict(
         n_clusters=n_clusters, method=["bistochastic", "scale", "log"]
     ),
     "SpectralCoclustering": dict(n_clusters=n_clusters),
     "KShape": dict(n_clusters=n_clusters),
-    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel),
+    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel_metrics),
     "TimeSeriesKMeans": dict(
         n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
     ),
@@ -147,12 +158,12 @@ variables_to_optimize = {
 
 
 clusterers_w_precomputed = {
-            "AffinityPropagation",
-            "AgglomerativeClustering",
-            "DBSCAN",
-            "OPTICS",
-            "SpectralClustering",
-        }
+    "AffinityPropagation",
+    "AgglomerativeClustering",
+    "DBSCAN",
+    "OPTICS",
+    "SpectralClustering",
+}
 
 
 need_ground_truth = [

@@ -1,14 +1,41 @@
-from sklearn.cluster import *
+from sklearn.cluster import (
+    AffinityPropagation,
+    AgglomerativeClustering,
+    Birch,
+    DBSCAN,
+    KMeans,
+    MiniBatchKMeans,
+    BisectingKMeans,
+    MeanShift,
+    OPTICS,
+    SpectralClustering,
+    SpectralBiclustering,
+    SpectralCoclustering,
+)
 from sklearn.metrics import *
-from tslearn.clustering import *
-from .additional_clusterers import *
-from .additional_metrics import *
+from tslearn.clustering import KShape, KernelKMeans, TimeSeriesKMeans
+from .additional_clusterers import NMFCluster
+from .additional_metrics import (
+    largest_cluster_size,
+    smallest_cluster_size,
+    smallest_cluster_ratio,
+    number_clustered,
+    number_of_clusters,
+    smallest_largest_clusters_ratio,
+)
 from pandas import DataFrame
 import pandas as pd
 import numpy as np
 import logging
 from typing import Optional, Iterable, Dict
-from .constants import *
+from .constants import (
+    kernel_metrics,
+    PAIRWISE_DISTANCE_FUNCTIONS,
+    PAIRWISE_KERNEL_FUNCTIONS,
+    need_ground_truth,
+    inherent_metrics,
+    clusterers_w_precomputed,
+)
 from hypercluster.constants import param_delim, val_delim
 
 
@@ -211,17 +238,22 @@ def pick_best_labels(
 
 def get_precomputed(data, metrics):
     return {
-        metric: pd.DataFrame(PAIRWISE_KERNEL_FUNCTIONS[metric](
-            data
-            if "chi2" not in metric
-            else data.add(data.min(axis=1).abs(), axis=0)
+        metric: pd.DataFrame(
+            PAIRWISE_KERNEL_FUNCTIONS[metric](
+                data
+                if "chi2" not in metric and metric != "cdist_soft_dtw"
+                else data.add(abs(data.min()))
+            )
+            if metric in kernel_metrics
+            else PAIRWISE_DISTANCE_FUNCTIONS[metric](data),
+            index=data.index,
+            columns=data.index,
         )
-        if metric in kernel
-        else PAIRWISE_DISTANCE_FUNCTIONS[metric](data), index=data.index, columns=data.index)
         for metric in metrics
     }
 
+
 def is_precomputed(clust_name, params):
     return clust_name in clusterers_w_precomputed and not (
-                "linkage" in params and params["linkage"] == "ward"
+        "linkage" in params and params["linkage"] == "ward"
     )
