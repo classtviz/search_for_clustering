@@ -22,6 +22,7 @@ from .additional_metrics import (
     number_clustered,
     number_of_clusters,
     smallest_largest_clusters_ratio,
+    fraction_clustered
 )
 from pandas import DataFrame
 import pandas as pd

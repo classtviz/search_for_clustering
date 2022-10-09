@@ -177,6 +177,7 @@ inherent_metrics = [
     "number_of_clusters",
     "smallest_cluster_size",
     "largest_cluster_size",
+    "fraction_clustered"
 ]
 
 min_or_max = {

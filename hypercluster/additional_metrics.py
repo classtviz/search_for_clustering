@@ -21,6 +21,20 @@ def number_clustered(_, labels: Iterable) -> float:
     return (labels != -1).sum()
 
 
+def fraction_clustered(_, labels: Iterable) -> float:
+    """Returns the fraction value of clustered samples.
+
+    Args:
+        _: Dummy, pass anything or None.
+        labels (Iterable): Vector of sample labels.
+
+    Returns (int):
+        The number of clustered labels.
+
+    """
+    return (labels != -1).sum() / len(labels)
+
+
 def smallest_largest_clusters_ratio(_, labels: Iterable) -> float:
     """Number in the smallest cluster over the number in the largest cluster.
 
