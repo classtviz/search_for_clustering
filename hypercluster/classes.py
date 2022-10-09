@@ -123,7 +123,7 @@ class AutoClusterer(Clusterer):
         self.params_to_optimize.pop("func_dict", None)
         for parameter_name, possible_values in self.params_to_optimize.items():
             if len(possible_values) == 1:
-                static_kwargs[parameter_name] = possible_values
+                static_kwargs[parameter_name] = possible_values[0]
             elif len(possible_values) > 1:
                 vars_to_optimize[parameter_name] = possible_values
                 conditions *= conditions * len(possible_values)
@@ -175,7 +175,7 @@ class AutoClusterer(Clusterer):
             parameters = parameters.sample(will_search, weights=weights)
 
         for col in static_kwargs.keys():
-            parameters[col] = static_kwargs[col]
+            parameters.loc[:, col] = static_kwargs[col]
 
         logging.info(
             "For clusterer %s, testing %s out of %s possible conditions"
