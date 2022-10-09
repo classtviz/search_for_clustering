@@ -142,6 +142,8 @@ def evaluate_one(
             compare_to = data.loc[clustered, clustered]
         else:
             compare_to = data.loc[clustered]
+        if method == 'fraction_clustered':
+            clustered = labels.index
     else:
         compare_to = None
         clustered = labels.index
