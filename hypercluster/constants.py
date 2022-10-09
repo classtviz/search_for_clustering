@@ -108,41 +108,41 @@ kernel_metrics = [
 ]
 
 variables_to_optimize = {
-    # "AffinityPropagation": dict(
-    #     damping=damping, affinity=kernel_metrics, func_dict=PAIRWISE_KERNEL_FUNCTIONS
-    # ),
-    # "AgglomerativeClustering": dict(
-    #     n_clusters=n_clusters,
-    #     affinity=distance_metrics,
-    #     linkage=["average", "single", "complete", "ward"],
-    #     func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
-    # ),
-    # "Birch": dict(
-    #     threshold=np.linspace(0.1, 0.99, num=10),
-    #     branching_factor=list(range(10, 101, 10)),
-    #     n_clusters=n_clusters,
-    # ),
-    # "DBSCAN": dict(
-    #     eps=np.linspace(0.01, 1.0, num=10),
-    #     metric=distance_metrics,
-    #     func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
-    # ),
-    # "KMeans": dict(n_clusters=n_clusters),
-    # "MiniBatchKMeans": dict(n_clusters=n_clusters),
-    # "BisectingKMeans": dict(n_clusters=n_clusters),
-    # "MeanShift": dict(cluster_all=[False]),
-    # "OPTICS": dict(
-    #     min_samples=min_cluster_size,
-    #     metric=distance_metrics,
-    #     func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
-    # ),
-    # "NMFCluster": dict(n_clusters=n_clusters),
-    # "SpectralClustering": dict(
-    #     n_clusters=n_clusters,
-    #     affinity=[k for k in kernel_metrics if k != 'additive_chi2'],
-    #     func_dict=PAIRWISE_KERNEL_FUNCTIONS,
-    # ),
-    # "KShape": dict(n_clusters=n_clusters),
+    "AffinityPropagation": dict(
+        damping=damping, affinity=kernel_metrics, func_dict=PAIRWISE_KERNEL_FUNCTIONS
+    ),
+    "AgglomerativeClustering": dict(
+        n_clusters=n_clusters,
+        affinity=distance_metrics,
+        linkage=["average", "single", "complete", "ward"],
+        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    ),
+    "Birch": dict(
+        threshold=np.linspace(0.1, 0.99, num=10),
+        branching_factor=list(range(10, 101, 10)),
+        n_clusters=n_clusters,
+    ),
+    "DBSCAN": dict(
+        eps=np.linspace(0.01, 1.0, num=10),
+        metric=distance_metrics,
+        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    ),
+    "KMeans": dict(n_clusters=n_clusters),
+    "MiniBatchKMeans": dict(n_clusters=n_clusters),
+    "BisectingKMeans": dict(n_clusters=n_clusters),
+    "MeanShift": dict(cluster_all=[False]),
+    "OPTICS": dict(
+        min_samples=min_cluster_size,
+        metric=distance_metrics,
+        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    ),
+    "NMFCluster": dict(n_clusters=n_clusters),
+    "SpectralClustering": dict(
+        n_clusters=n_clusters,
+        affinity=[k for k in kernel_metrics if k != 'additive_chi2'],
+        func_dict=PAIRWISE_KERNEL_FUNCTIONS,
+    ),
+    "KShape": dict(n_clusters=n_clusters),
     "KernelKMeans": dict(n_clusters=n_clusters, kernel=[k if k != 'cosine_sim' else 'cosine' for k in kernel_metrics]),
     "TimeSeriesKMeans": dict(
         n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
