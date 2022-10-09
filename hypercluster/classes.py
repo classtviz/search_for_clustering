@@ -210,7 +210,8 @@ class AutoClusterer(Clusterer):
             if "affinity" in variables_to_optimize[self.clusterer_name]
             else "metric"
         )
-
+        if (data < 0.).any().any():
+            data = data.add(abs(data.min()))
         label_results = pd.DataFrame(columns=self.param_sets.columns.union(data.index))
         for i, row in self.param_sets.iterrows():
             single_params = row.to_dict()
@@ -224,17 +225,6 @@ class AutoClusterer(Clusterer):
                 data_to_fit = self.precomputed[single_params[affinity_or_metric]].copy()
                 keep_metric_name = single_params[affinity_or_metric]
                 single_params[affinity_or_metric] = "precomputed"
-
-                if (
-                    keep_metric_name == "cdist_soft_dtw"
-                    and (data_to_fit < 0.0).any().any()
-                ):
-                    data_to_fit = data_to_fit.add(abs(data_to_fit.min()))
-
-                if np.any(np.diagonal(data_to_fit) != 0):
-                    data_to_fit.values[
-                        tuple([np.arange(data_to_fit.shape[0])] * 2)
-                    ] = 0.0
             else:
                 data_to_fit = data.copy()
 
@@ -244,6 +234,7 @@ class AutoClusterer(Clusterer):
                 ).labels_
             except ValueError as e:
                 print(self.clusterer_name, single_params, keep_metric_name)
+                raise ValueError(e)
 
             for score_metric in inherent_metrics:
                 data_to_score = data.copy()
@@ -252,10 +243,6 @@ class AutoClusterer(Clusterer):
                         data_to_score = self.precomputed[keep_metric_name].copy()
                         if keep_metric_name in PAIRWISE_KERNEL_FUNCTIONS:
                             data_to_score *= -1
-                        if np.any(np.diagonal(data_to_score) != 0):
-                            data_to_score.values[
-                                tuple([np.arange(data_to_score.shape[0])] * 2)
-                            ] = 0.0
 
                     if (data_to_score < 0).any().any():
                         data_to_score = data_to_score.add(abs(data_to_score.min()))

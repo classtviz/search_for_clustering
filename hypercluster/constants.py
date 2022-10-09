@@ -15,7 +15,6 @@ from sklearn.metrics.pairwise import (
 from tslearn.metrics import (
     cdist_dtw,
     cdist_ctw,
-    cdist_soft_dtw,
     cdist_soft_dtw_normalized,
     cdist_gak,
 )
@@ -67,17 +66,16 @@ resolutions = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
 knn = [20, 30, 60]
 
 PAIRWISE_DISTANCE_FUNCTIONS = {
+    "additive_chi2": lambda x: -additive_chi2_kernel(x),
     "cosine_dist": cosine_distances,
     "euclidean": euclidean_distances,
     "manhattan": manhattan_distances,
     "cdist_dtw": cdist_dtw,
     "cdist_ctw": cdist_ctw,
-    "cdist_soft_dtw": cdist_soft_dtw,
     "cdist_soft_dtw_normalized": cdist_soft_dtw_normalized,
 }
 
 PAIRWISE_KERNEL_FUNCTIONS = {
-    "additive_chi2": additive_chi2_kernel,
     "chi2": chi2_kernel,
     "linear": linear_kernel,
     "polynomial": polynomial_kernel,
@@ -89,17 +87,16 @@ PAIRWISE_KERNEL_FUNCTIONS = {
 }
 
 distance_metrics = [
+    "additive_chi2",
     "cosine_dist",
     "euclidean",
     "manhattan",
     "cdist_dtw",
     "cdist_ctw",
-    "cdist_soft_dtw",
     "cdist_soft_dtw_normalized",
 ]
 
 kernel_metrics = [
-    "additive_chi2",
     "chi2",
     "linear",
     "polynomial",
@@ -111,46 +108,42 @@ kernel_metrics = [
 ]
 
 variables_to_optimize = {
-    "AffinityPropagation": dict(
-        damping=damping, affinity=kernel_metrics, func_dict=PAIRWISE_KERNEL_FUNCTIONS
-    ),
-    "AgglomerativeClustering": dict(
-        n_clusters=n_clusters,
-        affinity=distance_metrics,
-        linkage=["average", "single", "complete", "ward"],
-        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
-    ),
-    "Birch": dict(
-        threshold=np.linspace(0.1, 0.99, num=10),
-        branching_factor=list(range(10, 101, 10)),
-        n_clusters=n_clusters,
-    ),
-    "DBSCAN": dict(
-        eps=np.linspace(0.01, 1.0, num=10),
-        metric=distance_metrics,
-        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
-    ),
-    "KMeans": dict(n_clusters=n_clusters),
-    "MiniBatchKMeans": dict(n_clusters=n_clusters),
-    "BisectingKMeans": dict(n_clusters=n_clusters),
-    "MeanShift": dict(cluster_all=[False]),
-    "OPTICS": dict(
-        min_samples=min_cluster_size,
-        metric=distance_metrics,
-        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
-    ),
-    "NMFCluster": dict(n_clusters=n_clusters),
-    "SpectralClustering": dict(
-        n_clusters=n_clusters,
-        affinity=kernel_metrics,
-        func_dict=PAIRWISE_KERNEL_FUNCTIONS,
-    ),
-    "SpectralBiclustering": dict(
-        n_clusters=n_clusters, method=["bistochastic", "scale", "log"]
-    ),
-    "SpectralCoclustering": dict(n_clusters=n_clusters),
-    "KShape": dict(n_clusters=n_clusters),
-    "KernelKMeans": dict(n_clusters=n_clusters, kernel=kernel_metrics),
+    # "AffinityPropagation": dict(
+    #     damping=damping, affinity=kernel_metrics, func_dict=PAIRWISE_KERNEL_FUNCTIONS
+    # ),
+    # "AgglomerativeClustering": dict(
+    #     n_clusters=n_clusters,
+    #     affinity=distance_metrics,
+    #     linkage=["average", "single", "complete", "ward"],
+    #     func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    # ),
+    # "Birch": dict(
+    #     threshold=np.linspace(0.1, 0.99, num=10),
+    #     branching_factor=list(range(10, 101, 10)),
+    #     n_clusters=n_clusters,
+    # ),
+    # "DBSCAN": dict(
+    #     eps=np.linspace(0.01, 1.0, num=10),
+    #     metric=distance_metrics,
+    #     func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    # ),
+    # "KMeans": dict(n_clusters=n_clusters),
+    # "MiniBatchKMeans": dict(n_clusters=n_clusters),
+    # "BisectingKMeans": dict(n_clusters=n_clusters),
+    # "MeanShift": dict(cluster_all=[False]),
+    # "OPTICS": dict(
+    #     min_samples=min_cluster_size,
+    #     metric=distance_metrics,
+    #     func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
+    # ),
+    # "NMFCluster": dict(n_clusters=n_clusters),
+    # "SpectralClustering": dict(
+    #     n_clusters=n_clusters,
+    #     affinity=[k for k in kernel_metrics if k != 'additive_chi2'],
+    #     func_dict=PAIRWISE_KERNEL_FUNCTIONS,
+    # ),
+    # "KShape": dict(n_clusters=n_clusters),
+    "KernelKMeans": dict(n_clusters=n_clusters, kernel=[k if k != 'cosine_sim' else 'cosine' for k in kernel_metrics]),
     "TimeSeriesKMeans": dict(
         n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
     ),

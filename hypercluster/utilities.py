@@ -137,7 +137,10 @@ def evaluate_one(
                 "Chosen evaluation metric %s requires data input." % method
             )
         clustered = labels != -1
-        compare_to = data.loc[clustered]
+        if "metric" in metric_kwargs and metric_kwargs["metric"] == "precomputed":
+            compare_to = data.loc[clustered, clustered]
+        else:
+            compare_to = data.loc[clustered]
     else:
         compare_to = None
         clustered = labels.index
@@ -237,20 +240,35 @@ def pick_best_labels(
 
 
 def get_precomputed(data, metrics):
-    return {
-        metric: pd.DataFrame(
-            PAIRWISE_KERNEL_FUNCTIONS[metric](
+    res = {}
+    for metric in metrics:
+        if metric in PAIRWISE_KERNEL_FUNCTIONS:
+            precomp = PAIRWISE_KERNEL_FUNCTIONS[metric](
                 data
-                if "chi2" not in metric and metric != "cdist_soft_dtw"
+                if not ("chi2" in metric and (data < 0.0).any().any())
                 else data.add(abs(data.min()))
             )
-            if metric in kernel_metrics
-            else PAIRWISE_DISTANCE_FUNCTIONS[metric](data),
-            index=data.index,
-            columns=data.index,
-        )
-        for metric in metrics
-    }
+        elif metric in PAIRWISE_DISTANCE_FUNCTIONS:
+            precomp = PAIRWISE_DISTANCE_FUNCTIONS[metric](
+                data
+                if not ("chi2" in metric and (data < 0.0).any().any())
+                else data.add(abs(data.min()))
+            )
+        else:
+            raise Exception(f"unknown metric {metric}")
+
+        precomp = pd.DataFrame(precomp, index=data.index, columns=data.index)
+
+        if (precomp < 0.0).any().any():
+            precomp = precomp.add(abs(precomp.min()))
+            if (
+                metric in PAIRWISE_DISTANCE_FUNCTIONS
+                and (precomp.diagonal() != 0.0).any()
+            ):
+                precomp.values[tuple([np.arange(precomp.shape[0])] * 2)] = 0.0
+        res[metric] = precomp.copy()
+
+    return res
 
 
 def is_precomputed(clust_name, params):
