@@ -78,6 +78,7 @@ class AutoClusterer(Clusterer):
         labels_df: Optional[DataFrame] = None,
         evaluation_df: Optional[DataFrame] = None,
         precomputed: dict[str, pd.DataFrame] = None,
+        mlflow_tags: Optional[dict] = None
     ):
 
         self.clusterer_name = clusterer_name
@@ -86,6 +87,7 @@ class AutoClusterer(Clusterer):
         self.random_search_fraction = random_search_fraction
         self.param_weights = param_weights
         self.clus_kwargs = clus_kwargs
+        self.mlflow_tags = mlflow_tags
 
         if self.params_to_optimize is None:
             self.params_to_optimize = deepcopy(variables_to_optimize[clusterer_name])
@@ -219,6 +221,8 @@ class AutoClusterer(Clusterer):
             if mlflow:
                 mlflow.start_run()
                 mlflow.log_params({**single_params, "model": self.clusterer_name})
+                if self.mlflow_tags:
+                    mlflow.set_tags(self.mlflow_tags)
 
             keep_metric_name = None
             if is_precomputed(self.clusterer_name, single_params):
@@ -409,6 +413,7 @@ class MultiAutoClusterer(Clusterer):
         evaluation_: Dict[str, AutoClusterer] = None,
         labels_df: Optional[DataFrame] = None,
         evaluation_df: Optional[DataFrame] = None,
+        mlflow_tags: Optional[dict] = None
     ):
 
         self.random_search = random_search
@@ -467,6 +472,7 @@ class MultiAutoClusterer(Clusterer):
                         labels_=self.labels_.get(clus_name, None),
                         evaluation_=self.evaluation_.get(clus_name, None),
                         precomputed=precomputed,
+                        mlflow_tags=mlflow_tags
                     )
                 )
             self.autoclusterers = autoclusterers
