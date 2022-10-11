@@ -59,7 +59,7 @@ categories = {
     "clustering": clusterers,
 }
 
-min_cluster_size = [i for i in range(2, 50, 1)]
+min_cluster_size = [i for i in range(2, 150, 3)]
 n_clusters = [i for i in range(2, 50)]
 damping = [i / 100 for i in range(55, 95, 5)]
 resolutions = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
@@ -108,14 +108,11 @@ kernel_metrics = [
 ]
 
 variables_to_optimize = {
-    "AffinityPropagation": dict(
-        damping=damping, affinity=kernel_metrics, func_dict=PAIRWISE_KERNEL_FUNCTIONS
-    ),
+    "AffinityPropagation": dict(damping=damping, affinity=kernel_metrics),
     "AgglomerativeClustering": dict(
         n_clusters=n_clusters,
         affinity=distance_metrics,
         linkage=["average", "single", "complete", "ward"],
-        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
     ),
     "Birch": dict(
         threshold=np.linspace(0.1, 0.99, num=10),
@@ -125,7 +122,6 @@ variables_to_optimize = {
     "DBSCAN": dict(
         eps=np.linspace(0.01, 1.0, num=10),
         metric=distance_metrics,
-        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
     ),
     "KMeans": dict(n_clusters=n_clusters),
     "MiniBatchKMeans": dict(n_clusters=n_clusters),
@@ -134,16 +130,17 @@ variables_to_optimize = {
     "OPTICS": dict(
         min_samples=min_cluster_size,
         metric=distance_metrics,
-        func_dict=PAIRWISE_DISTANCE_FUNCTIONS,
     ),
     "NMFCluster": dict(n_clusters=n_clusters),
     "SpectralClustering": dict(
         n_clusters=n_clusters,
-        affinity=[k for k in kernel_metrics if k != 'additive_chi2'],
-        func_dict=PAIRWISE_KERNEL_FUNCTIONS,
+        affinity=[k for k in kernel_metrics if k != "additive_chi2"],
     ),
     "KShape": dict(n_clusters=n_clusters),
-    "KernelKMeans": dict(n_clusters=n_clusters, kernel=[k if k != 'cosine_sim' else 'cosine' for k in kernel_metrics]),
+    "KernelKMeans": dict(
+        n_clusters=n_clusters,
+        kernel=[k if k != "cosine_sim" else "cosine" for k in kernel_metrics],
+    ),
     "TimeSeriesKMeans": dict(
         n_clusters=n_clusters, metric=["euclidean", "dtw", "softdtw"]
     ),
@@ -177,7 +174,7 @@ inherent_metrics = [
     "number_of_clusters",
     "smallest_cluster_size",
     "largest_cluster_size",
-    "fraction_clustered"
+    "fraction_clustered",
 ]
 
 min_or_max = {

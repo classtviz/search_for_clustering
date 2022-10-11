@@ -78,7 +78,7 @@ class AutoClusterer(Clusterer):
         labels_df: Optional[DataFrame] = None,
         evaluation_df: Optional[DataFrame] = None,
         precomputed: dict[str, pd.DataFrame] = None,
-        mlflow_tags: Optional[dict] = None
+        mlflow_tags: Optional[dict] = None,
     ):
 
         self.clusterer_name = clusterer_name
@@ -149,8 +149,20 @@ class AutoClusterer(Clusterer):
 
             if (
                 self.clusterer_name == "AgglomerativeClustering"
-                and vars["linkage"] == "ward"
-                and vars["affinity"] != "euclidean"
+                and (
+                    ("linkage" in vars and vars["linkage"] == "ward")
+                    or (
+                        "linkage" in static_kwargs
+                        and static_kwargs["linkage"] == "ward"
+                    )
+                )
+                and (
+                    ("affinity" in vars and vars["affinity"] != "euclidean")
+                    or (
+                        "affinity" in static_kwargs
+                        and static_kwargs["affinity"] != "euclidean"
+                    )
+                )
             ):
                 continue
 
@@ -212,7 +224,7 @@ class AutoClusterer(Clusterer):
             if "affinity" in variables_to_optimize[self.clusterer_name]
             else "metric"
         )
-        if (data < 0.).any().any():
+        if (data < 0.0).any().any():
             data = data.add(abs(data.min()))
         label_results = pd.DataFrame(columns=self.param_sets.columns.union(data.index))
         for i, row in self.param_sets.iterrows():
@@ -413,7 +425,7 @@ class MultiAutoClusterer(Clusterer):
         evaluation_: Dict[str, AutoClusterer] = None,
         labels_df: Optional[DataFrame] = None,
         evaluation_df: Optional[DataFrame] = None,
-        mlflow_tags: Optional[dict] = None
+        mlflow_tags: Optional[dict] = None,
     ):
 
         self.random_search = random_search
@@ -472,7 +484,7 @@ class MultiAutoClusterer(Clusterer):
                         labels_=self.labels_.get(clus_name, None),
                         evaluation_=self.evaluation_.get(clus_name, None),
                         precomputed=precomputed,
-                        mlflow_tags=mlflow_tags
+                        mlflow_tags=mlflow_tags,
                     )
                 )
             self.autoclusterers = autoclusterers
