@@ -30,7 +30,7 @@ except ImportError:
 
 
 class Clusterer:
-    """Meta class for shared methods for both AutoClusterer and MultiAutoClusterer."""
+    """Metaclass for shared methods for both AutoClusterer and MultiAutoClusterer."""
 
     def pick_best_labels(
         self, method: Optional[str] = None, min_or_max: Optional[str] = None
@@ -60,7 +60,7 @@ class AutoClusterer(Clusterer):
         clus_kwargs (dict): Additional kwargs to pass into given clusterer, but not to be \
         optimized. Default None.  
         labels_ (Optional[DataFrame]): If already fit, labels DataFrame fit to data.  
-        evaluation_ (Optional[DataFrame]): If already fit and evalute, evaluations per label.  
+        evaluation_ (Optional[DataFrame]): If already fit and evaluate, evaluations per label.  
         data (Optional[DataFrame]): Data to fit, will not fit by default even if passed data.  
     """
 
@@ -70,7 +70,7 @@ class AutoClusterer(Clusterer):
         params_to_optimize: Optional[dict] = None,
         random_search: bool = False,
         random_search_fraction: Optional[float] = 0.5,
-        param_weights: dict = {},
+        param_weights: dict = None,
         clus_kwargs: Optional[dict] = None,
         labels_: Optional[DataFrame] = None,
         evaluation_: Optional[DataFrame] = None,
@@ -225,7 +225,7 @@ class AutoClusterer(Clusterer):
             else "metric"
         )
         if (data < 0.0).any().any():
-            data = data.add(abs(data.min()))
+            data = data.add(data.min(axis=1).apply(lambda x: min(x, 0)).abs(), axis=0)
         label_results = pd.DataFrame(columns=self.param_sets.columns.union(data.index))
         for i, row in self.param_sets.iterrows():
             single_params = row.to_dict()
@@ -261,7 +261,13 @@ class AutoClusterer(Clusterer):
                             data_to_score *= -1
 
                     if (data_to_score < 0).any().any():
-                        data_to_score = data_to_score.add(abs(data_to_score.min()))
+                        if is_precomputed(self.clusterer_name, single_params):
+                            data_to_score = data_to_score.add(abs(data_to_score.min()))
+                        else:
+                            data_to_score = data_to_score.add(
+                                data_to_score.min(axis=1).apply(lambda x: min(x, 0)),
+                                axis=0,
+                            )
 
                     if is_precomputed(self.clusterer_name, single_params) and np.any(
                         np.diagonal(data_to_score) != 0

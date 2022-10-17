@@ -18,31 +18,13 @@ from tslearn.metrics import (
     cdist_soft_dtw_normalized,
     cdist_gak,
 )
-from .additional_metrics import *
+from scipy.spatial.distance import correlation, pdist, squareform
 
 
-__doc__ = """
-Attributes: 
-    param_delim: delimiter between hyperparameters for snakemake file labels and labels DataFrame \
-    columns.  
-    val_delim: delimiter between hyperparameter label and value for snakemake file labels and \
-    labels DataFrame columns.  
-    categories: Convenient groups of clusterers to use. If all samples need to be clustered, \
-    'partitioners' is a good choice. If there are millions of samples, 'fastest' might be a good \
-    choice.    
-    variables_to_optimize: Some default hyperparameters to optimize and value ranges for a \
-    selection of commonly used clustering algoirthms from sklearn. Used as deafults for \
-    clustering.AutoClusterer and clustering.optimize_clustering.    
-    need_ground_truth: list of sklearn metrics that need ground truth labeling. \
-    "adjusted_rand_score", "adjusted_mutual_info_score", "homogeneity_score", \
-    "completeness_score", "fowlkes_mallows_score", "mutual_info_score", "v_measure_score"    
-    inherent_metrics: list of sklearn metrics that need original data for calculation. \
-    "silhouette_score", "calinski_harabasz_score", "davies_bouldin_score", \
-    "smallest_largest_clusters_ratio", "number_of_clusters", "smallest_cluster_size", \
-    "largest_cluster_size"  
-    min_or_max: establishing whether each sklearn metric is better when minimized or maximized for \
-    clustering.pick_best_labels.  
-"""
+def pdist_corr(d1):
+    return squareform(pdist(d1, metric=correlation))
+
+
 param_delim = ";"
 val_delim = "-"
 
@@ -73,6 +55,7 @@ PAIRWISE_DISTANCE_FUNCTIONS = {
     "cdist_dtw": cdist_dtw,
     "cdist_ctw": cdist_ctw,
     "cdist_soft_dtw_normalized": cdist_soft_dtw_normalized,
+    "correlation": pdist_corr,
 }
 
 PAIRWISE_KERNEL_FUNCTIONS = {
@@ -94,6 +77,7 @@ distance_metrics = [
     "cdist_dtw",
     "cdist_ctw",
     "cdist_soft_dtw_normalized",
+    "correlation",
 ]
 
 kernel_metrics = [
@@ -107,7 +91,15 @@ kernel_metrics = [
     "gak",
 ]
 
+import hdbscan
+
+hdbscan.HDBSCAN()
+
 variables_to_optimize = {
+    "HDBSCAN": dict(
+        min_cluster_size=min_cluster_size,
+        min_samples=list(range(2, 30, 3)),
+    ),
     "AffinityPropagation": dict(damping=damping, affinity=kernel_metrics),
     "AgglomerativeClustering": dict(
         n_clusters=n_clusters,

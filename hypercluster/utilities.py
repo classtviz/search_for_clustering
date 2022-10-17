@@ -12,6 +12,7 @@ from sklearn.cluster import (
     SpectralBiclustering,
     SpectralCoclustering,
 )
+from hdbscan import HDBSCAN
 from sklearn.metrics import *
 from tslearn.clustering import KShape, KernelKMeans, TimeSeriesKMeans
 from .additional_clusterers import NMFCluster
